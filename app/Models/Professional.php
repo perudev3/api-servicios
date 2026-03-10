@@ -9,6 +9,21 @@ class Professional extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'category_id',
+        'document_number',
+        'identity_card',
+        'professional_card',
+        'professional_title',
+        'photo',
+        'phone',
+        'bio',
+        'address',
+        'status',
+        'is_verified'
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

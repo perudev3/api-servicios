@@ -38,10 +38,12 @@ Route::middleware(['auth:api', 'active'])->group(function () {
         Route::apiResource('admin/categories', AdminCategoryController::class);
     });
 
-    Route::middleware('professional')->prefix('professional')->group(function () {
+    Route::middleware('professional')
+        ->prefix('professional')
+        ->group(function () {
 
-        Route::get('/professional/dashboard', [ProfessionalController::class, 'dashboard']);
+            Route::get('/dashboard', [ProfessionalController::class, 'dashboard']);
+            Route::post('/profile', [ProfessionalController::class, 'storeOrUpdate']);
 
-        Route::post('/professional/profile', [ProfessionalController::class, 'storeOrUpdate']);
     });
 });

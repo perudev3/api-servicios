@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Professional;
 use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
@@ -11,14 +12,15 @@ class AdminUserController extends Controller
     // ── Lista usuarios con filtros, búsqueda y paginación ──────────
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::with('professional')
+            ->where('role', '!=', 'admin');
 
         // Búsqueda por nombre o email
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name',  'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -50,8 +52,9 @@ class AdminUserController extends Controller
 
         // Ordenamiento
         $sortable = ['name', 'email', 'created_at', 'role', 'is_active'];
-        $sort     = in_array($request->sort, $sortable) ? $request->sort : 'created_at';
-        $dir      = $request->dir === 'asc' ? 'asc' : 'desc';
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'created_at';
+        $dir  = $request->dir === 'asc' ? 'asc' : 'desc';
+
         $query->orderBy($sort, $dir);
 
         // Paginación
@@ -71,6 +74,8 @@ class AdminUserController extends Controller
     // ── Ver detalle de un usuario ──────────────────────────────────
     public function show(User $user)
     {
+        $user->load('professional');
+
         return response()->json([
             'success' => true,
             'user'    => $user,
@@ -147,15 +152,19 @@ class AdminUserController extends Controller
         }
 
         switch ($request->action) {
+
             case 'activate':
-                User::whereIn('id', $ids)->update(['is_active' => true]);
+                Professional::whereIn('user_id', $ids)->update([
+                    'is_verified' => 1,
+                    'status' => 'approved'
+                ]);
                 break;
 
             case 'deactivate':
-                User::whereIn('id', $ids)->each(function ($user) {
-                    $user->update(['is_active' => false]);
-                    $user->tokens()->delete(); // revocar sesiones
-                });
+                Professional::whereIn('user_id', $ids)->update([
+                    'is_verified' => 0,
+                    'status' => 'rejected'
+                ]);
                 break;
 
             case 'delete':
@@ -199,14 +208,15 @@ class AdminUserController extends Controller
     // ── Método privado reutilizable para estadísticas ──────────────
     private function getStats(): array
     {
+        $baseQuery = User::where('role', '!=', 'admin');
+
         return [
-            'total'         => User::count(),
-            'clients'       => User::where('role', 'client')->count(),
-            'professionals' => User::where('role', 'professional')->count(),
-            'admins'        => User::where('role', 'admin')->count(),
-            'active'        => User::where('is_active', true)->count(),
-            'inactive'      => User::where('is_active', false)->count(),
-            'verified'      => User::whereNotNull('email_verified_at')->count(),
+            'total'         => (clone $baseQuery)->count(),
+            'clients'       => (clone $baseQuery)->where('role', 'client')->count(),
+            'professionals' => (clone $baseQuery)->where('role', 'professional')->count(),
+            'active'        => (clone $baseQuery)->where('is_active', true)->count(),
+            'inactive'      => (clone $baseQuery)->where('is_active', false)->count(),
+            'verified'      => (clone $baseQuery)->whereNotNull('email_verified_at')->count(),
         ];
     }
 }
