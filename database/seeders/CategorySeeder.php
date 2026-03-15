@@ -8,28 +8,25 @@ use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
         $categories = [
-            'Plomería',
-            'Electricidad',
-            'Carpintería',
-            'Limpieza',
-            'Jardinería',
-            'Pintura',
-            'Reparaciones del hogar'
+            'Capacitación',
+            'Certificados Medicos',
+            'Plan de Saneamiento',
+            'Fumigacion',
+            'Asesoria'
         ];
 
-        foreach ($categories as $cat) {
+        foreach ($categories as $category) {
+
             Category::create([
-                'name' => $cat,
-                'slug' => Str::slug($cat),
+                'name' => $category,
+                'slug' => Str::slug($category),
+                'description' => $category,
+                'is_active' => true
             ]);
+
         }
     }
 }

@@ -28,6 +28,7 @@ class ProfessionalController extends Controller
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'document_number' => 'required|string',
+            'service_id' => 'required|exists:services,id',
 
             'identity_card' => $existingProfessional
                 ? 'nullable|file|mimes:pdf,jpg,jpeg,png'
@@ -48,6 +49,7 @@ class ProfessionalController extends Controller
             'phone' => 'required|string',
             'bio' => 'nullable|string',
             'address' => 'nullable|string',
+            'city_id' => 'nullable|exists:cities,id',
         ]);
 
         // 🔥 Mantener archivos anteriores si no se envían nuevos
@@ -76,6 +78,7 @@ class ProfessionalController extends Controller
             ['user_id' => $user->id],
             [
                 'category_id' => $request->category_id,
+                'service_id' => $request->service_id,
                 'document_number' => $request->document_number,
                 'identity_card' => $identityPath,
                 'professional_card' => $professionalCardPath,
@@ -84,14 +87,42 @@ class ProfessionalController extends Controller
                 'phone' => $request->phone,
                 'bio' => $request->bio,
                 'address' => $request->address,
+                'city_id' => $request->city_id,
                 'status' => 'pending',
             ]
         );
-
         return response()->json([
             'success' => true,
             'message' => 'Perfil enviado correctamente. Pendiente de aprobación.',
             'professional' => $professional
         ]);
+    }
+
+    public function availableForClient(Request $request)
+    {
+        $professionals = Professional::with('user')
+            ->where('city_id', $request->city_id)
+            ->where('service_id', $request->service_id)
+            ->where('is_verified', true)
+            ->get();
+
+        $result = [];
+
+        foreach ($professionals as $p) {
+            // Buscar el servicio directo por service_id
+            $service = \App\Models\Service::find($p->service_id);
+
+            $result[] = [
+                'id'      => $p->id,
+                'name'    => $p->user->name,
+                'phone'   => $p->phone,
+                'photo'   => $p->photo,
+                'service' => $service ? $service->name : null,
+                'lat'     => null,
+                'lng'     => null,
+            ];
+        }
+
+        return response()->json($result);
     }
 }

@@ -15,6 +15,7 @@ class AdminUserController extends Controller
         $query = User::with('professional')
             ->where('role', '!=', 'admin');
 
+            
         // Búsqueda por nombre o email
         if ($request->filled('search')) {
             $search = $request->search;

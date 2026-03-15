@@ -12,6 +12,7 @@ class Professional extends Model
     protected $fillable = [
         'user_id',
         'category_id',
+        'service_id',
         'document_number',
         'identity_card',
         'professional_card',
@@ -20,6 +21,7 @@ class Professional extends Model
         'phone',
         'bio',
         'address',
+        'city_id', 
         'status',
         'is_verified'
     ];
@@ -32,5 +34,18 @@ class Professional extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function services()
+    {
+        return $this->belongsToMany(
+            Service::class,
+            'professional_services'
+        );
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
     }
 }
