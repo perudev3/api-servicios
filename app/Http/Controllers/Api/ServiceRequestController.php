@@ -63,7 +63,7 @@ class ServiceRequestController extends Controller
     {
         $professional = $request->user()->professional;
 
-        $requests = ServiceRequest::with('client', 'service')
+        $requests = ServiceRequest::with('client', 'service', 'city')
             ->where('city_id', $professional->city_id)
             ->where('service_id', $professional->service_id)
             ->where('status', 'pending')
@@ -81,6 +81,7 @@ class ServiceRequestController extends Controller
                 'budget'       => $r->budget,
                 'service_name' => $r->service ? $r->service->name : null,
                 'client_name'  => $r->client ? $r->client->name : 'Cliente',
+                'city_name'    => $r->city->name,
             ];
         }));
     }
