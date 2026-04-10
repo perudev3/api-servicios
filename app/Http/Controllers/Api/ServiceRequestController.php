@@ -107,4 +107,75 @@ class ServiceRequestController extends Controller
         ]);
     }
 
+    // Solicitudes aceptadas por el profesional
+    public function accepted(Request $request)
+    {
+        $professional = $request->user()->professional;
+
+        $requests = ServiceRequest::with('client', 'service', 'city')
+            ->where('professional_id', $professional->id)
+            ->whereIn('status', ['accepted', 'completed'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return response()->json($requests->map(function ($r) {
+            return [
+                'id'           => $r->id,
+                'description'  => $r->description,
+                'address'      => $r->address,
+                'service_date' => $r->service_date,
+                'service_time' => $r->service_time,
+                'budget'       => $r->budget,
+                'status'       => $r->status,
+                'service_name' => $r->service ? $r->service->name : null,
+                'client_name'  => $r->client ? $r->client->name : 'Cliente',
+                'client_phone' => $r->client ? $r->client->phone : null,
+                'city_name'    => $r->city ? $r->city->name : null,
+            ];
+        }));
+    }
+
+    // Profesional ingresa el código para completar el trabajo
+    public function verifyCode(Request $request, $id)
+    {
+        $request->validate([
+            'code' => 'required|string|size:6',
+        ]);
+
+        $professional   = $request->user()->professional;
+        $serviceRequest = ServiceRequest::where('id', $id)
+            ->where('professional_id', $professional->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        if (!$serviceRequest->completion_code) {
+            return response()->json([
+                'message' => 'El cliente aún no ha generado el código'
+            ], 422);
+        }
+
+        if (now()->gt($serviceRequest->completion_code_expires_at)) {
+            return response()->json([
+                'message' => 'El código ha expirado, pide al cliente que genere uno nuevo'
+            ], 422);
+        }
+
+        if ($serviceRequest->completion_code !== $request->code) {
+            return response()->json([
+                'message' => 'Código incorrecto'
+            ], 422);
+        }
+
+        $serviceRequest->update([
+            'status'                     => 'completed',
+            'completed_at'               => now(),
+            'completion_code'            => null,
+            'completion_code_expires_at' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Trabajo completado y aprobado por el cliente'
+        ]);
+    }
+
 }

@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\ServiceRequestController;
 use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\WorkEvidenceController;
+use App\Http\Controllers\Api\ClientRequestController;
 
 // ── Rutas públicas ─────────────────────────────────────────
 Route::post('register', [AuthController::class, 'register']);
@@ -79,6 +81,17 @@ Route::middleware(['auth:api', 'active'])->group(function () {
             Route::get('/requests/available', [ServiceRequestController::class, 'available']);
             Route::post('/requests/{id}/accept', [ServiceRequestController::class, 'accept']);
 
+            // Solicitudes aceptadas del profesional
+            Route::get('/requests/accepted', [ServiceRequestController::class, 'accepted']);
+
+            // Evidencias
+            Route::get('/requests/{id}/evidences',    [WorkEvidenceController::class, 'index']);
+            Route::post('/requests/{id}/evidences',   [WorkEvidenceController::class, 'store']);
+            Route::post('/requests/{id}/complete',    [WorkEvidenceController::class, 'complete']);
+
+            // Profesional — verificar código e ingresar como completado
+            Route::post('/requests/{id}/verify-code', [ServiceRequestController::class, 'verifyCode']);
+
         });
 
     Route::middleware('client')
@@ -86,6 +99,14 @@ Route::middleware(['auth:api', 'active'])->group(function () {
         ->group(function() {
             Route::post('/service-request', [ServiceRequestController::class, 'store']);
             Route::get('/service-request/{id}/status', [ServiceRequestController::class, 'checkStatus']);
-            Route::get('/professionals-available', [ProfessionalController::class, 'availableForClient']); // 👈
+            Route::get('/professionals-available', [ProfessionalController::class, 'availableForClient']); 
+
+            // Cliente — ver sus solicitudes
+            Route::get('/requests', [ClientRequestController::class, 'index']);
+
+            // Cliente — generar código de aprobación
+            Route::post('/requests/{id}/generate-code', [ClientRequestController::class, 'generateCode']);
+
+
         });
 });

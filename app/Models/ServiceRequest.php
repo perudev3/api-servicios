@@ -17,7 +17,9 @@ class ServiceRequest extends Model
         'service_time',
         'budget',
         'status',
-        'professional_id'
+        'professional_id',
+        'completion_code',
+        'completion_code_expires_at'
     ];
 
     public function client()
