@@ -53,13 +53,22 @@ class AuthController extends Controller
         }
 
         $user  = Auth::user();
+        $user->load('adminPermission'); // cargar relación
         $token = $user->createToken('auth_token')->accessToken;
 
         return response()->json([
             'success' => true,
             'token'   => $token,
             'role'    => $user->role,
-            'user'    => $user,
+            'user' => [
+                'id'             => $user->id,
+                'name'           => $user->name,
+                'email'          => $user->email,
+                'role'           => $user->role,
+                'is_active'      => $user->is_active,
+                'is_super_admin' => $user->isSuperAdmin(),
+                'permissions'    => $user->adminPermission ? $user->adminPermission->modules : [],
+            ],
         ]);
     }
 

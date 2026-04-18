@@ -19,7 +19,12 @@ class ServiceRequest extends Model
         'status',
         'professional_id',
         'completion_code',
-        'completion_code_expires_at'
+        'completion_code_expires_at',
+        'people_names'
+    ];
+
+    protected $casts = [
+        'people_names' => 'array',
     ];
 
     public function client()

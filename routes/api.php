@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ServiceRequestController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\WorkEvidenceController;
 use App\Http\Controllers\Api\ClientRequestController;
+use App\Http\Controllers\Api\AdminPermissionController;
 
 // ── Rutas públicas ─────────────────────────────────────────
 Route::post('register', [AuthController::class, 'register']);
@@ -37,40 +38,45 @@ Route::middleware(['auth:api', 'active'])->group(function () {
     Route::get('profile',  [AuthController::class, 'profile']);
     Route::post('logout',  [AuthController::class, 'logout']);
 
-    // ── Rutas solo admin ───────────────────────────────────
-    Route::middleware('admin')
-            ->prefix('admin')
-            ->group(function () {
+    // ── Rutas solo admin ───────────────────────────────────────
+Route::middleware('admin')
+        ->prefix('admin')
+        ->group(function () {
 
-                // Usuarios
-                Route::get('users',                            [AdminUserController::class, 'index']);
-                Route::get('users/{user}',                     [AdminUserController::class, 'show']);
-                Route::put('users/{user}',                     [AdminUserController::class, 'update']);
-                Route::patch('users/{user}/toggle-status',     [AdminUserController::class, 'toggleStatus']);
-                Route::post('users/bulk',                      [AdminUserController::class, 'bulk']);
+            // ── Stats del dashboard ────────────────────────
+            Route::get('stats', [AdminUserController::class, 'stats']);
 
-                // Stats del dashboard
-                Route::get('stats',                            [AdminUserController::class, 'stats']);
-
-                // Categoria del dashboard
-                Route::get('/categories',[CategoryController::class,'index']);
-
-                Route::post('/categories',[CategoryController::class,'store']);
-
-                Route::put('/categories/{category}',[CategoryController::class,'update']);
-
-                Route::delete('/categories/{category}',[CategoryController::class,'destroy']);
-
-                // Servicios del dashboard
-                Route::post('/services',[ServiceController::class,'store']);
-
-                Route::put('/services/{service}',[ServiceController::class,'update']);
-
-                Route::delete('/services/{service}',[ServiceController::class,'destroy']);
-
-                
+            // ── Módulo: Usuarios ───────────────────────────
+            Route::middleware('admin.module:users')->group(function () {
+                Route::get('users',                        [AdminUserController::class, 'index']);
+                Route::get('users/{user}',                 [AdminUserController::class, 'show']);
+                Route::put('users/{user}',                 [AdminUserController::class, 'update']);
+                Route::patch('users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus']);
+                Route::post('users/bulk',                  [AdminUserController::class, 'bulk']);
             });
 
+            // ── Módulo: Categorías ─────────────────────────
+            Route::middleware('admin.module:categories')->group(function () {
+                Route::get('/categories',                  [CategoryController::class, 'index']);
+                Route::post('/categories',                 [CategoryController::class, 'store']);
+                Route::put('/categories/{category}',       [CategoryController::class, 'update']);
+                Route::delete('/categories/{category}',    [CategoryController::class, 'destroy']);
+            });
+
+            // ── Módulo: Servicios ──────────────────────────
+            Route::middleware('admin.module:services')->group(function () {
+                Route::post('/services',                   [ServiceController::class, 'store']);
+                Route::put('/services/{service}',          [ServiceController::class, 'update']);
+                Route::delete('/services/{service}',       [ServiceController::class, 'destroy']);
+            });
+
+            // ── Gestión de sub-admins (solo super admin) ───
+            Route::get('/sub-admins',           [AdminPermissionController::class, 'index']);
+            Route::post('/sub-admins',          [AdminPermissionController::class, 'store']);
+            Route::put('/sub-admins/{user}',    [AdminPermissionController::class, 'update']);
+            Route::delete('/sub-admins/{user}', [AdminPermissionController::class, 'destroy']);
+        });
+    
     Route::middleware('professional')
         ->prefix('professional')
         ->group(function () {

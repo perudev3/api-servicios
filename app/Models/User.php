@@ -40,4 +40,21 @@ class User extends Authenticatable
     {
         return $this->hasOne(Professional::class);
     }
+
+
+    public function adminPermission()
+    {
+        return $this->hasOne(AdminPermission::class);
+    }
+
+    public function canAccessModule(string $module): bool
+    {
+        if (!$this->adminPermission) return true;
+        return $this->adminPermission->can($module);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'admin' && !$this->adminPermission;
+    }
 }

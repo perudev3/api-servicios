@@ -19,6 +19,7 @@ class ServiceRequestController extends Controller
             'service_time'=> 'required',
             'budget'      => 'nullable|numeric',
             'city_id' => 'nullable|exists:cities,id',
+            'people_names' => 'nullable|array',
         ]);
 
         $serviceRequest = ServiceRequest::create([
@@ -31,6 +32,7 @@ class ServiceRequestController extends Controller
             'service_time' => $request->service_time,
             'budget'       => $request->budget,
             'city_id' => $request->city_id,
+            'people_names' => $request->people_names,
         ]);
 
         return response()->json([

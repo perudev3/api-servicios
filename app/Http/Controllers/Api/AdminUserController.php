@@ -12,7 +12,7 @@ class AdminUserController extends Controller
     // ── Lista usuarios con filtros, búsqueda y paginación ──────────
     public function index(Request $request)
     {
-        $query = User::with('professional')
+        $query = User::with('professional.category')
             ->where('role', '!=', 'admin');
 
             
